@@ -1,5 +1,6 @@
 package com.nesthome.controller;
 
+import com.nesthome.entity.serviceEntity;
 import com.nesthome.service.UserService;
 
 import java.util.Map;
@@ -31,4 +32,29 @@ public class AdminController {
         userService.assignRole(username, roleName);
         return ResponseEntity.ok(Map.of("message", "Role assigned successfully"));
     }
+    
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> delete(@RequestBody Map<String,String> request)
+    {
+    	String username=request.get("username");
+    	userService.delete(username);
+    	return ResponseEntity.ok("user deleted successfully");
+    }
+    
+    @PostMapping("/create_service")
+    public ResponseEntity<?> create_service(@RequestBody Map<String, Object> request) {
+        String service_name = (String) request.get("service_name");
+        double price = Double.parseDouble(request.get("price").toString());
+
+        if (userService.findByService(service_name).isPresent()) {
+            return ResponseEntity.badRequest().body("Service already exists");
+        }
+        serviceEntity service = new serviceEntity();
+        service.setName(service_name);
+        service.setPrice(price);
+        userService.saveService(service);
+
+        return ResponseEntity.ok("Service Created Successfully");
+    }
+
 }

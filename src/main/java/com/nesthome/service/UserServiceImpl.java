@@ -1,13 +1,16 @@
 package com.nesthome.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.nesthome.entity.Role;
 import com.nesthome.entity.User;
+import com.nesthome.entity.serviceEntity;
 import com.nesthome.repository.RoleRepository;
+import com.nesthome.repository.ServiceRepository;
 import com.nesthome.repository.UserRepository;
 
 @Service
@@ -16,10 +19,12 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userrepository;
     private final RoleRepository rolerepository;
     private final PasswordEncoder passwordEncoder;
-    public UserServiceImpl(UserRepository userrepository, RoleRepository rolerepository,PasswordEncoder passwordEncoder) {
+    private final ServiceRepository servicerepository;
+    public UserServiceImpl(UserRepository userrepository, RoleRepository rolerepository,PasswordEncoder passwordEncoder,ServiceRepository servicerepository) {
         this.userrepository = userrepository;
         this.rolerepository = rolerepository;
         this.passwordEncoder=passwordEncoder;
+        this.servicerepository=servicerepository;
     }
 
     @Override
@@ -58,4 +63,35 @@ public class UserServiceImpl implements UserService {
         userrepository.save(user);
 		
 	}
+
+	@Override
+	public void delete(String username) {
+		User user=findByUsername(username);
+		userrepository.delete(user);
+		
+	}
+
+	@Override
+	public Optional<serviceEntity> findByService(String service_name) {
+	    return servicerepository.findByName(service_name);
+	}
+
+	@Override
+	public serviceEntity saveService(serviceEntity service) {
+		return servicerepository.save(service);
+	}
+
+	@Override
+	public List<serviceEntity> findAllServices() {
+		return servicerepository.findAll();
+	}
+
+	@Override
+	public List<User> findProfessionalsByServiceAndPincode(int serviceId, int pincode) {
+		return userrepository.findProfessionalsByPincodeAndService(pincode, serviceId);
+	}
+
+	
+		
+
 }

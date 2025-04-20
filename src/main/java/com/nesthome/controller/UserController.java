@@ -1,11 +1,22 @@
 package com.nesthome.controller;
 
+import com.nesthome.entity.ServiceRequest;
 import com.nesthome.entity.User;
+import com.nesthome.entity.serviceEntity;
+import com.nesthome.repository.ServiceRepository;
+import com.nesthome.repository.ServiceRequestRepository;
+import com.nesthome.repository.UserRepository;
 import com.nesthome.service.UserService;
+
+import jakarta.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -14,13 +25,23 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-
+    
+    @Autowired
+    private ServiceRequestRepository servicerequestrepo;
+    
+    @Autowired
+    private ServiceRepository servicerepo;
+    
+    @Autowired
+    private UserRepository userrepo;
+    
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(@RequestParam String username) {
+    public ResponseEntity<?> getUserProfile(@RequestBody Map<String,String> request) {
+    	String username=request.get("username");
         User user = userService.findByUsername(username);
         return ResponseEntity.ok(user);
     }
@@ -30,4 +51,65 @@ public class UserController {
         userService.saveUser(user);
         return ResponseEntity.ok(Map.of("message", "Profile updated successfully"));
     }
+    
+    @GetMapping("/show_services")
+    public ResponseEntity<?> show_services()
+    {   	
+		return ResponseEntity.ok(userService.findAllServices());
+    	
+    }
+    
+    @PostMapping("/request-service")
+    public ResponseEntity<?> requestService(@RequestBody Map<String, Object> request, HttpSession session) {
+        try {
+            Long userId = (Long) session.getAttribute("userId"); 
+            int serviceId = (int) request.get("serviceId");
+
+            User user = userrepo.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            serviceEntity service = servicerepo.findById(serviceId)
+                    .orElseThrow(() -> new RuntimeException("Service not found"));
+
+            ServiceRequest serviceRequest = new ServiceRequest();
+            serviceRequest.setUser(user);
+            serviceRequest.setService(service);
+            serviceRequest.setRequestedAt(LocalDateTime.now());
+
+            servicerequestrepo.save(serviceRequest);
+
+            return ResponseEntity.ok(Map.of("message", "Service request recorded successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Failed to record request",
+                "details", e.getMessage()
+            ));
+        }
+    }
+    
+    @GetMapping("/get-professionals/{serviceId}")
+    public ResponseEntity<?> getProfessionalsByService(
+            @PathVariable int serviceId,
+            HttpSession session
+    ) {
+        try {
+            Long userId = (Long) session.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not logged in"));
+            }
+
+            User user = userrepo.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            int pincode = user.getPincode();  // assuming pincode is stored in the User entity
+            var professionals = userService.findProfessionalsByServiceAndPincode(serviceId, pincode);
+
+            return ResponseEntity.ok(professionals);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    Map.of("error", "Something went wrong", "details", e.getMessage())
+            );
+        }
+    }
+
 }
