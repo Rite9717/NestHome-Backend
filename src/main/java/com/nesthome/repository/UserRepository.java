@@ -23,5 +23,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     	       "AND s.id = :serviceId")
     	List<User> findProfessionalsByPincodeAndService(@Param("pincode") int pincode,
     	                                                 @Param("serviceId") int serviceId);
-
+    
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = 'USER'")
+    int total_no_of_users();
+    
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = 'PROFESSIONAL'")
+    int total_no_of_professional();
 }

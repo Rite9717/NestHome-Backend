@@ -91,6 +91,16 @@ public class UserServiceImpl implements UserService {
 		return userrepository.findProfessionalsByPincodeAndService(pincode, serviceId);
 	}
 
+	@Override
+	public int total_no_of_user() {
+		return userrepository.total_no_of_users();
+	}
+
+	@Override
+	public int total_no_of_professional() {
+		return userrepository.total_no_of_professional();
+	}
+
 	
 		
 

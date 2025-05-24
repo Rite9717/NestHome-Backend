@@ -19,4 +19,6 @@ public interface UserService {
 	serviceEntity saveService(serviceEntity service);
 	List<serviceEntity> findAllServices();
 	public List<User> findProfessionalsByServiceAndPincode(int serviceId, int pincode);
+	public int total_no_of_user();
+	public int total_no_of_professional();
 }

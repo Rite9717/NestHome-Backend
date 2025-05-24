@@ -30,10 +30,8 @@ public class ProfessionalController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Not authenticated");
         }
-
         String username = authentication.getName();
         User user = userService.findByUsername(username);
-
         return ResponseEntity.ok(user);
     }
 }
